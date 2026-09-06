@@ -1,0 +1,6 @@
+[submodule "MW5-UEVR-Plugins"]
+	path = MW5-UEVR-Plugins
+	url = .\\MW5-UEVR-Plugins\\
+[submodule "UEVR"]
+	path = UEVR
+	url = .\\UEVR\\
