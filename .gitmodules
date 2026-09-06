@@ -1,6 +1,6 @@
 [submodule "MW5-UEVR-Plugins"]
 	path = MW5-UEVR-Plugins
-	url = .\\MW5-UEVR-Plugins\\
+	url = https://github.com/Shorefeesh/MW5-UEVR-Plugins.git
 [submodule "UEVR"]
 	path = UEVR
-	url = .\\UEVR\\
+	url = https://github.com/Shorefeesh/UEVR.git
