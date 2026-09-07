@@ -121,7 +121,7 @@ Successful initialization should include:
 Enabling XR_EXT_eye_gaze_interaction extension
 Eye gaze interaction supported: true
 Eye gaze action initialized
-HeadAim 2.13.2 initialized
+HeadAim 2.15.4 initialized
 
 If gaze becomes unavailable, HeadAim automatically falls back to head aiming.
 

@@ -25,16 +25,15 @@ While the player is in a mech, the plugin selects this control scheme automatica
 
 Head yaw and pitch represent desired torso angles rather than torso turn rates. Returning the head to playspace centre therefore returns the torso toward zero yaw and zero pitch, clamped only if the active mech's bounds exclude zero. No neutral is captured from the head or torso pose when entering a cockpit. Weapon aim and view pitch calibration do not alter this physical torso neutral.
 
-Yaw has a 1° central deadzone. After removing that deadzone, the torso target maps 1:1 through 15°; it then expands linearly and reaches the active mech's full left/right torso range at 75°:
+Head position uses one continuous ease-in power curve with no deadzone. Its exponent is 1.5 and the torso mapping has a 1:1 floor: the desired torso rotation is never less than the physical head rotation unless the mech has reached its mechanical limit. The curve reaches the active mech's full directional torso range at 80° of head yaw and 30° of head pitch:
 
 ```text
-H = absolute head yaw relative to the cockpit, minus the 1° deadzone
-M = torso limit in H's direction
+H = absolute head angle relative to playspace centre
+I = maximum input head angle (80° yaw, 30° pitch)
+M = torso travel from neutral to the limit in H's direction
 
-if H <= 15°:
-    F(H) = H
-else:
-    F(H) = 15° + min((H - 15°) / 60°, 1) × (M - 15°)
+R(H) = (H / I)^1.5
+F(H) = min(max(H, R(H) × M), M)
 ```
 
 `TorsoTwistComponent.TorsoStats` exposes the values required to adapt this mapping to each mech:
@@ -46,7 +45,7 @@ else:
 
 The two directions are calculated independently in case the bounds are asymmetric. For a 360°-capable mech, use a virtual range of -180° to +180°.
 
-Pitch has the same 1° central deadzone and maps 1:1 from playspace level through 15°. Between 15° and 30° of physical pitch, the torso target expands from 15° to the active directional pitch limit. The upper and lower directions are calculated independently from `Torso.BoundsLow.y` and `Torso.BoundsHigh.y`; an unbound pitch axis uses −90° and +90° as virtual limits.
+The upper and lower pitch directions are calculated independently from `Torso.BoundsLow.y` and `Torso.BoundsHigh.y`; an unbound pitch axis uses −90° and +90° as virtual limits. The curve saturates at the relevant mechanical limit.
 
 `Head-Driven Torso > View Pitch Offset` on UEVR's Input page adjusts the player's settled view relative to the cockpit. It does not alter the physical torso's world-space neutral or the weapon-aim pitch offset.
 
@@ -64,13 +63,19 @@ Do not write the torso angle directly. Driving the existing controller preserves
 
 ### Cockpit-relative head view
 
-Rendered head yaw remains 1:1 with the physical headset through 15°. Between 15° and 75°, its settled cockpit-relative angle is compressed linearly from 15° to 20°. Beyond 75°, 1:1 overflow resumes so the head does not become mechanically locked at the torso limit.
+The settled cockpit-relative view uses the same unbounded curve as torso position:
 
-Torso-lag compensation is blended in across the 15°–75° outer range. At 15° none of the torso error affects the view; at 75° the full difference between desired and actual torso yaw is temporarily added to the cockpit view. This keeps the outer-range world view responsive while the torso catches up, then settles back toward the mapped 15°–20° cockpit angle as the error disappears.
+```text
+cockpit offset = 15° × R(H)
+```
 
-Rendered pitch remains 1:1 through 15°. Between 15° and 30°, its settled cockpit-relative angle maps from 15° to 20°, with pitch-lag compensation blended from 0% to 100%. Beyond 30°, 1:1 overflow resumes so vertical head movement remains unrestricted.
+It reaches 15° at 80° of physical yaw and at 30° of physical pitch. Unlike torso position, the curve is not clamped at that point.
 
-The yaw compensation and `View Pitch Offset` are applied in render space identically to both stereo eyes. Eye targets receive the same offsets so the gaze reticle stays aligned; the underlying HMD and OpenXR gaze poses remain unmodified.
+As in the original `head aim torso v1` implementation, the full difference between desired and actual torso position is added to the cockpit-relative view while the mech catches up. It has no separate blend threshold and is not clamped to the 15° directional offset. Once the torso catches up, the error disappears and the view settles at the curve offset.
+
+Physical head movement beyond 80° yaw or 30° pitch continues along the same power curve. This keeps head rotation unrestricted when the mech is at its mechanical limit without switching to a separate linear overflow response. Lag error and the continuing curve can both carry the cockpit-relative view past the nominal 15° endpoint.
+
+The yaw and pitch adjustment is applied identically to both stereo eyes before UEVR composes the HMD pose. Before applying it, the plugin calculates the roll that the untouched cockpit and physical HMD pose would produce. After stereo composition, only that original roll component is restored; the completed cockpit/world transform, position, yaw, pitch, and stereo separation are not reconstructed or replaced. Eye targets receive the same yaw/pitch offsets so the gaze reticle stays aligned; the underlying HMD and OpenXR gaze poses remain unmodified.
 
 ### Throttle and leg controls
 
