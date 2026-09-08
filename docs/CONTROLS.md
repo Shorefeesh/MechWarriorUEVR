@@ -6,8 +6,6 @@ The standard control scheme is awkward in VR. Legs use tank controls, the torso 
 - Head rotation -> in-cockpit view
 - Controller inputs -> Use mouse and keyboard / HOTAS instead
 
-The full left-stick vector is rotated by the raw cockpit-relative head heading and then projected onto the forward/reverse throttle axis; its lateral component is discarded. For example, while looking 90° left, pressing the physical stick right produces forward throttle, while pressing it forward produces no movement. Right-stick vertical input is used internally for head-driven torso pitch and is not a physical control.
-
 ### Eye aiming
 
 Your Quest Pro runtime advertises XR_EXT_eye_gaze_interaction in C:\Users\samon\AppData\Roaming\UnrealVRMod\MechWarrior-Win64-Shipping\log.txt:328, so the headset/runtime side is capable.
@@ -19,3 +17,7 @@ The HeadAim plugin keeps weapon aiming separate from physical torso control: bot
 The original mod's head-aim pitch offset applies only to head-based fallback. Eye gaze uses the dedicated UEVR weapon-aim yaw and pitch offsets and does not inherit the legacy head offset.
 
 While the player is in a mech, the plugin selects this control scheme automatically; it does not depend on the mod exposing its internal `ArmsOnly`/`TorsoAndArms` enum in the UI.
+
+### Eye-directed zoom
+
+While zoom is active, the HUD plugin redirects the camera at the end of the HUD manager's tick and moves the zoom-display mesh, outline, and captured weapon-target overlay with the eye-driven arm-target reticle. It bypasses the original torso-centered zoom compensation while calculating the reticle position. The torso reticle remains in its normal position. The plugin also raises both zoom scene-capture textures from the mod's 320x215 default to 640x430; it preserves any already-higher resolution.

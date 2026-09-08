@@ -4,6 +4,8 @@ This project contains components required for a UEVR integration for Mechwarrior
 
 ## Index
 
+`artefacts\` Output files and artefacts
+`artefacts\inspector\tools\` Repak and UAssetGUI
 `MW5-UEVR-Plugins\` Local checkout of MW5-UEVR-Plugins
 `UEVR\` Local checkout of UEVR
 `C:\Program Files\GOG Galaxy\Games\MW5Mercs\MW5Mercs\Mods\MechWarriorVR\` MechWarriorVR mod folder
